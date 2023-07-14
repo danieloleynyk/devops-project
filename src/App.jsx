@@ -5,7 +5,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const lowerLimit = -10; // Set your lower limit here
   const upperLimit = 10; // Set your upper limit here
-  const numberRegex = /^-?\d+$/;
+  const numberRegex = /^-?(?!0\d+)\d+$/;
 
   const isValidNumber = (input) => {
     return numberRegex.test(input);
@@ -21,7 +21,7 @@ function App() {
     }
 
     if (!isValidNumber(value)) {
-      setErrorMessage("The value is invalid");
+      setErrorMessage(`The value ${value} is invalid`);
     } else if (value > upperLimit) {
       setCounter(upperLimit);
       setErrorMessage("Counter reached the upper limit");
