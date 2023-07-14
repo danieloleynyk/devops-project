@@ -38,7 +38,7 @@ function App() {
     if (counter >= upperLimit) {
       setErrorMessage("Counter reached the upper limit");
     } else {
-      setCounter((prevCounter) => prevCounter + 1);
+      setCounter((prevCounter) => parseInt(prevCounter) + 1);
       setErrorMessage("");
     }
   };
@@ -47,7 +47,7 @@ function App() {
     if (counter <= lowerLimit) {
       setErrorMessage("Counter reached the lower limit");
     } else {
-      setCounter((prevCounter) => prevCounter - 1);
+      setCounter((prevCounter) => parseInt(prevCounter) - 1);
       setErrorMessage("");
     }
   };
