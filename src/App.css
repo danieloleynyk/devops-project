@@ -17,6 +17,10 @@
   height: 400px;
 }
 
+.error-message {
+  color: rgb(117, 11, 11);
+}
+
 .counter {
   background-color: transparent;
   border: solid 1px black;
