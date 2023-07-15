@@ -21,3 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+/ansible/group_vars/docker.env
+.pytest_cache
+__pycache__

@@ -68,6 +68,7 @@ function App() {
           <div className="inputs">
             <div>
               <button
+                className="btn-dec"
                 disabled={counter <= lowerLimit}
                 onClick={handleDecrement}
               >
@@ -75,6 +76,7 @@ function App() {
               </button>
 
               <button
+                className="btn-inc"
                 disabled={counter >= upperLimit}
                 onClick={handleIncrement}
               >
