@@ -1,0 +1,67 @@
+---
+- name: Provision EC2 instance with Docker
+  hosts: localhost
+  gather_facts: False
+  
+  vars_files:
+    - vars.yaml
+
+  tasks:
+    - name: Destroy EC2 instance
+      ec2_instance:
+        state: absent
+        region: "{{ region }}"
+        instance_ids: "{{ ec2_instance_ids }}"
+
+    - name: Delete Security Group
+      ec2_group:
+        state: absent
+        region: "{{ region }}"
+        name: "{{ project_name }}-sg"
+
+    - name: List all route tables for the VPC
+      ec2_vpc_route_table_info:
+        region: "{{ region }}"
+        filters:
+          vpc-id: "{{ vpc_id }}"
+      register: route_tables
+
+    - name: Delete route tables
+      ec2_vpc_route_table:
+        state: absent
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        lookup: id
+        route_table_id: "{{ item.id }}"
+      with_items: "{{ route_tables.route_tables }}"
+      when: item.associations | length == 0
+
+    - name: Delete Route Table
+      amazon.aws.ec2_vpc_route_table:
+        state: absent
+        region: "{{ region }}"
+        route_table_id: "{{ route_table_id }}"
+        vpc_id: "{{ vpc_id }}"
+
+    - name: Delete Internet Gateway
+      amazon.aws.ec2_vpc_igw:
+        state: absent
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+
+    - name: Delete Subnets
+      ec2_vpc_subnet:
+        state: absent
+        region: "{{ region }}"
+        
+        vpc_id: "{{ vpc_id }}"
+        cidr: "{{ item.cidr }}"
+        az: "{{ item.name }}"
+
+      with_items: "{{ availability_zones }}"
+        
+    - name: Delete VPC
+      amazon.aws.ec2_vpc_net:
+        state: absent
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"

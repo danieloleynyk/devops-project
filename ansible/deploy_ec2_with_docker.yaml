@@ -1,0 +1,204 @@
+---
+- name: Provision EC2 instance with Docker
+  hosts: localhost
+  gather_facts: False
+
+  vars_files:
+    - vars.yaml
+
+  tasks:
+    - name: Create VPC
+      amazon.aws.ec2_vpc_net:
+        state: present
+        region: "{{ region }}"
+
+        name: "{{ project_name }}-vpc"
+        cidr_block: "{{ vpc_cidr }}"
+
+      register: vpc
+
+    - name: Update the vpc_id in vars.yaml
+      ansible.builtin.lineinfile:
+        path: vars.yaml
+        regex: "^vpc_id:.*$"
+        line: "vpc_id: \"{{ vpc.vpc.id }}\""
+      when: vpc.vpc.id is defined
+
+    - name: Create Subnet
+      ec2_vpc_subnet:
+        state: present
+        region: "{{ region }}"
+        
+        vpc_id: "{{ vpc_id }}"
+        cidr: "{{ item.cidr }}"
+        az: "{{ item.name }}"
+        map_public: true
+
+        resource_tags:
+          Name: "{{ project_name }}-{{ item.name }}-subnet"
+
+      with_items: "{{ availability_zones }}"
+      register: subnets
+
+    - name: Extract Subnet IDs
+      set_fact:
+        subnet_ids: "{{ subnets.results | json_query('[].subnet.id') }}"
+
+    - name: Update the subnet_id in vars.yaml
+      ansible.builtin.lineinfile:
+        path: vars.yaml
+        regex: "^subnet_ids:.*$"
+        line: "subnet_ids: \"{{ subnet_ids }}\""
+      when: subnet_ids is defined
+
+    - name: Create Internet Gateway
+      amazon.aws.ec2_vpc_igw:
+        state: present
+        vpc_id: "{{ vpc_id }}"
+
+      register: igw
+
+    - name: Update the internet_gateway in vars.yaml
+      ansible.builtin.lineinfile:
+        path: vars.yaml
+        regex: "^igw_id:.*$"
+        line: "igw_id: \"{{ igw.gateway_id }}\""
+      when: igw.gateway_id is defined
+
+    - name: Create Route Table
+      amazon.aws.ec2_vpc_route_table:
+        state: present
+        region: "{{ region }}"
+
+        vpc_id: "{{ vpc_id }}"
+        subnets: "{{ subnet_ids }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw_id }}"
+
+      register: route_table
+
+    - name: Update the route_table_id in vars.yaml
+      ansible.builtin.lineinfile:
+        path: vars.yaml
+        regex: "^route_table_id:.*$"
+        line: "route_table_id: \"{{ route_table.route_table.id }}\""
+      when: route_table.route_table.id is defined
+
+    - name: Create Security Group
+      ec2_group:
+        state: present
+        region: "{{ region }}"
+
+        name: "{{ project_name }}-sg"
+        description: "Allow SSH and Docker traffic"
+
+        vpc_id: "{{ vpc_id }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 22
+              - 80
+            cidr_ip: 0.0.0.0/0
+          - proto: icmp
+            from_port: -1
+            to_port: -1
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+
+      register: security_group
+
+    - name: Update the security_group_id in vars.yaml
+      ansible.builtin.lineinfile:
+        path: vars.yaml
+        regex: "^security_group_id:.*$"
+        line: "security_group_id: \"{{ security_group.group_id }}\""
+      when: security_group.group_id is defined
+
+    - name: Create EC2 instance
+      ec2_instance:
+        state: present
+        region: "{{ region }}"
+
+        name: "{{ project_name }}"
+
+        image_id: "{{ ec2_image }}"
+        instance_type: "{{ ec2_instance_type }}"
+
+        key_name: "{{ ec2_keypair_name }}"
+        security_group: "{{ security_group_id }}"
+        vpc_subnet_id: "{{ subnet_ids[0] }}"
+
+        network:
+          assign_public_ip: true
+          delete_on_termination: true
+
+      register: ec2
+
+    - name: Update the ec2_instance_ids in vars.yaml
+      ansible.builtin.lineinfile:
+        path: vars.yaml
+        regex: "^ec2_instance_ids:.*$"
+        line: "ec2_instance_ids: \"{{ ec2.instance_ids }}\""
+      when: ec2.instance_ids is defined
+
+    - name: Wait for SSH to become available
+      wait_for:
+        host: "{{ item.public_ip_address }}"
+        port: 22
+        delay: 10
+        timeout: 120
+        state: started
+      with_items: "{{ ec2.instances }}"
+    
+    - name: Add host to hosts group 'app'
+      ansible.builtin.add_host:
+        name: '{{ ec2.instances[0].public_ip_address }}'
+        groups: app
+
+- name: Prepare EC2 Machine
+  become: true
+  hosts:  app
+  
+  vars_files:
+    - vars.yaml
+
+  vars:
+    ansible_user: ec2-user
+    ansible_ssh_private_key_file: ansible/devops-project-keypair.pem
+  
+  tasks:
+    - name: Install Utils
+      yum:
+        name: 
+          - yum-utils
+          - docker
+          - git
+        state: latest
+
+    - name: Add user to the docker group
+      user:
+        name: "ec2-user"
+        groups: docker
+        append: yes
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Copy ssh key for git
+      ansible.builtin.copy:
+        src: "{{ ssh_keypath }}"
+        dest: /home/ec2-user/.ssh/id_rsa
+        mode: '0600'
+
+    - name: Clone repository
+      git:
+        repo: "{{ git_repository }}"
+        dest: "/home/ec2-user/{{ project_name }}"
+        accept_hostkey: yes
+        key_file: /home/ec2-user/.ssh/id_rsa
