@@ -190,3 +190,8 @@ sketch
 
 *.pem
 .env
+
+ansible/
+.github/
+*.py
+*.pyc

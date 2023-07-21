@@ -1,9 +1,11 @@
 version: "3.3"
+
 services:
   web:
-    container_name: counter
+    image: devops-project/app
+    build:
+      context: .
     environment:
       - NODE_ENV=prod
-    image: shanirfrid/counter:latest
     ports:
-      - "3000:3000"
+      - "3000:80"

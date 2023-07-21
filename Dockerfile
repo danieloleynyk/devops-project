@@ -1,6 +1,18 @@
-FROM node:16.14
+FROM node:16.14 AS build
+
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
 COPY . .
-CMD [ "npm", "start"]
+
+RUN npm run build
+
+FROM nginx:alpine
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
