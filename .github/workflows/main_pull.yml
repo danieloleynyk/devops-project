@@ -23,8 +23,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run pytest with Selenium
-        continue-on-error: true
         run: pytest -rA
 
       - name: Stop and remove Docker Compose containers
+        if: success() || failure()
         run: docker-compose down
