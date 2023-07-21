@@ -51,7 +51,7 @@ def test_upper_limit_error_message():
     err_message = driver.find_element(By.XPATH,"//*[@id='root']/div/div/p").text
     print(err_message)
     
-    assert err_message != "Counter reached the upper limit", "Wrong result"
+    assert err_message == "Counter reached the upper limit", "Wrong result"
   except AssertionError:
       print("Failed to upload limit error message")
       driver.quit()
