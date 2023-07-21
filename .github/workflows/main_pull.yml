@@ -1,0 +1,29 @@
+name: Run Docker Compose and pytest with Selenium
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build and run Docker Compose
+        run: |
+          docker-compose up -d --build
+
+      - name: Wait for the containers to start
+        run: sleep 60
+
+      - name: Run pytest with Selenium
+        run: |
+          pip install -r requirements.txt
+          pytest -rA
+
+      - name: Stop and remove Docker Compose containers
+        run: docker-compose down
