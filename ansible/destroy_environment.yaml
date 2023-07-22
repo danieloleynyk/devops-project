@@ -4,7 +4,8 @@
   gather_facts: False
   
   vars_files:
-    - vars.yaml
+    - vars/env.yaml
+    - vars/generated.yaml
 
   tasks:
     - name: Destroy EC2 instance
@@ -12,34 +13,21 @@
         state: absent
         region: "{{ region }}"
         instance_ids: "{{ ec2_instance_ids }}"
+      when: ec2_instance_ids is defined
 
     - name: Delete Security Group
       ec2_group:
         state: absent
         region: "{{ region }}"
-        name: "{{ project_name }}-sg"
-
-    - name: List all route tables for the VPC
-      ec2_vpc_route_table_info:
-        region: "{{ region }}"
-        filters:
-          vpc-id: "{{ vpc_id }}"
-      register: route_tables
-
-    - name: Delete route tables
-      ec2_vpc_route_table:
-        state: absent
-        region: "{{ region }}"
-        vpc_id: "{{ vpc_id }}"
-        lookup: id
-        route_table_id: "{{ item.id }}"
-      with_items: "{{ route_tables.route_tables }}"
+        group_id: "{{ security_group_id }}"
+      when: security_group_id is defined
 
     - name: Delete Internet Gateway
       amazon.aws.ec2_vpc_igw:
         state: absent
         region: "{{ region }}"
         vpc_id: "{{ vpc_id }}"
+      when: vpc_id is defined
 
     - name: Delete Subnets
       ec2_vpc_subnet:
@@ -49,11 +37,17 @@
         vpc_id: "{{ vpc_id }}"
         cidr: "{{ item.cidr }}"
         az: "{{ item.name }}"
-
       with_items: "{{ availability_zones }}"
+      when: vpc_id is defined
         
     - name: Delete VPC
       amazon.aws.ec2_vpc_net:
         state: absent
         region: "{{ region }}"
         vpc_id: "{{ vpc_id }}"
+      when: vpc_id is defined
+
+    - name: Clear generated.yaml
+      copy:
+        content: ''
+        dest: "vars/generated.yaml"

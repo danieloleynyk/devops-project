@@ -4,7 +4,8 @@
   gather_facts: False
 
   vars_files:
-    - vars.yaml
+    - vars/env.yaml
+    - vars/generated.yaml
 
   tasks:
     - name: Create VPC
@@ -17,9 +18,9 @@
 
       register: vpc
 
-    - name: Update the vpc_id in vars.yaml
+    - name: Update the vpc_id in generated.yaml
       ansible.builtin.lineinfile:
-        path: vars.yaml
+        path: vars/generated.yaml
         regex: "^vpc_id:.*$"
         line: "vpc_id: \"{{ vpc.vpc.id }}\""
       when: vpc.vpc.id is defined
@@ -44,9 +45,9 @@
       set_fact:
         subnet_ids: "{{ subnets.results | json_query('[].subnet.id') }}"
 
-    - name: Update the subnet_id in vars.yaml
+    - name: Update the subnet_id in generated.yaml
       ansible.builtin.lineinfile:
-        path: vars.yaml
+        path: vars/generated.yaml
         regex: "^subnet_ids:.*$"
         line: "subnet_ids: \"{{ subnet_ids }}\""
       when: subnet_ids is defined
@@ -58,9 +59,9 @@
 
       register: igw
 
-    - name: Update the internet_gateway in vars.yaml
+    - name: Update the internet_gateway in generated.yaml
       ansible.builtin.lineinfile:
-        path: vars.yaml
+        path: vars/generated.yaml
         regex: "^igw_id:.*$"
         line: "igw_id: \"{{ igw.gateway_id }}\""
       when: igw.gateway_id is defined
@@ -112,9 +113,9 @@
 
       register: security_group
 
-    - name: Update the security_group_id in vars.yaml
+    - name: Update the security_group_id in generated.yaml
       ansible.builtin.lineinfile:
-        path: vars.yaml
+        path: vars/generated.yaml
         regex: "^security_group_id:.*$"
         line: "security_group_id: \"{{ security_group.group_id }}\""
       when: security_group.group_id is defined
@@ -139,9 +140,9 @@
 
       register: ec2
 
-    - name: Update the ec2_instance_ids in vars.yaml
+    - name: Update the ec2_instance_ids in generated.yaml
       ansible.builtin.lineinfile:
-        path: vars.yaml
+        path: vars/generated.yaml
         regex: "^ec2_instance_ids:.*$"
         line: "ec2_instance_ids: \"{{ ec2.instance_ids }}\""
       when: ec2.instance_ids is defined
@@ -165,7 +166,7 @@
   hosts:  app
   
   vars_files:
-    - vars.yaml
+    - env.yaml
 
   vars:
     ansible_user: ec2-user
@@ -185,7 +186,7 @@
     - name: Install docker-compose
       remote_user: ec2-user
       get_url:
-        url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        url : https://github.com/docker/compose/releases/download/1.23.2/docker-compose-Linux-x86_64
         dest: /usr/local/bin/docker-compose
         mode: '+x'
     
@@ -233,9 +234,5 @@
           path: "/home/ec2-user/{{ project_name }}"
         tag: master
 
-    - name: Run `docker-compose up`
-      become: false
-      community.docker.docker_compose:
-        project_src: "/home/ec2-user/{{ project_name }}"
-        build: false
-      register: output
+    - name: Run docker-compose up
+      shell: docker-compose -f "/home/ec2-user/{{ project_name }}/docker-compose.yml" up -d

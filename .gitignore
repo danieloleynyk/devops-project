@@ -193,3 +193,5 @@ sketch
 venv/
 __pycache__
 *.pyc
+
+generated.yaml
