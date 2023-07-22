@@ -65,7 +65,14 @@
         line: "igw_id: \"{{ igw.gateway_id }}\""
       when: igw.gateway_id is defined
 
-    - name: Create Route Table
+    - name: List all route tables for the VPC
+      ec2_vpc_route_table_info:
+        region: "{{ region }}"
+        filters:
+          vpc-id: "{{ vpc_id }}"
+      register: route_tables
+
+    - name: Update Route Table
       amazon.aws.ec2_vpc_route_table:
         state: present
         region: "{{ region }}"
@@ -76,14 +83,9 @@
           - dest: 0.0.0.0/0
             gateway_id: "{{ igw_id }}"
 
-      register: route_table
-
-    - name: Update the route_table_id in vars.yaml
-      ansible.builtin.lineinfile:
-        path: vars.yaml
-        regex: "^route_table_id:.*$"
-        line: "route_table_id: \"{{ route_table.route_table.id }}\""
-      when: route_table.route_table.id is defined
+        lookup: id
+        route_table_id: "{{ item.id }}"
+      with_items: "{{ route_tables.route_tables }}"
 
     - name: Create Security Group
       ec2_group:
@@ -174,9 +176,25 @@
       yum:
         name: 
           - yum-utils
+          - libxcrypt-compat
+          - python3-pip
           - docker
           - git
         state: latest
+
+    - name: Install docker-compose
+      remote_user: ec2-user
+      get_url:
+        url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '+x'
+    
+    - name: install 'Docker SDK for Python'
+      become: false
+      pip:
+        name:
+          - docker
+          - docker-compose
 
     - name: Add user to the docker group
       user:
@@ -195,10 +213,22 @@
         src: "{{ ssh_keypath }}"
         dest: /home/ec2-user/.ssh/id_rsa
         mode: '0600'
+        owner: ec2-user
+        group: ec2-user
 
     - name: Clone repository
+      become: false
       git:
         repo: "{{ git_repository }}"
+        version: dev
         dest: "/home/ec2-user/{{ project_name }}"
         accept_hostkey: yes
         key_file: /home/ec2-user/.ssh/id_rsa
+
+
+    - name: Run `docker-compose up`
+      become: false
+      community.docker.docker_compose:
+        project_src: "/home/ec2-user/{{ project_name }}"
+        build: true
+      register: output

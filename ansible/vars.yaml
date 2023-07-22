@@ -4,18 +4,18 @@ availability_zones:
   - name: eu-central-1a
     cidr: 10.0.1.0/28
 
-vpc_id: "vpc-036a0e4c67940ddf2"
+vpc_id: "vpc-025ef1f0b0eda5821"
 vpc_cidr: 10.0.0.0/16
 
-igw_id: "igw-0b60e4b20a5e42d99"
-subnet_ids: "['subnet-0db532b4f61ab6728']"
-security_group_id: "sg-024cdd2ccb0dbc8e1"
-route_table_id: "rtb-0594aae56f9bc739a"
+igw_id: "igw-050032c32726fb686"
+subnet_ids: "['subnet-06146a135c4ec7fb4']"
+security_group_id: "sg-03795cf8b8f10f4e0"
+route_table_id: "rtb-01d9285174e5ebd31"
 
 ec2_instance_type: t2.micro
 ec2_image: ami-07ce6ac5ac8a0ee6f
 ec2_keypair_name: devops-project-keypair
-ec2_instance_ids: "['i-0b474555c609738df']"
+ec2_instance_ids: "['i-0c18c122b62aca22f']"
 
 git_repository: git@github.com:danieloleynyk/devops-project.git
 ssh_keypath: /home/daniel/.ssh/devops_project
