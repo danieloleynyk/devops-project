@@ -61,7 +61,7 @@ function App() {
     <React.Fragment>
       <div className="container">
         <div className="widget">
-          <h1 id="header">Devops Counter - With Change</h1>
+          <h1 id="header">Devops Counter</h1>
           <input className="counter" onChange={handleInput} value={counter} />
           {errorMessage && <p className="error-message">{errorMessage}</p>}
 
