@@ -27,8 +27,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ steps.get_image_name.outputs.image_name }} .
-          docker push ${{ steps.get_image_name.outputs.image_name }}
+          docker build -t danieloleynyk/devops-project:dev .
+          docker push danieloleynyk/devops-project:dev
 
 #   deploy:
 #     name: Deploy to EC2
