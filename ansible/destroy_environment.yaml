@@ -34,14 +34,6 @@
         lookup: id
         route_table_id: "{{ item.id }}"
       with_items: "{{ route_tables.route_tables }}"
-      when: item.associations | length == 0
-
-    - name: Delete Route Table
-      amazon.aws.ec2_vpc_route_table:
-        state: absent
-        region: "{{ region }}"
-        route_table_id: "{{ route_table_id }}"
-        vpc_id: "{{ vpc_id }}"
 
     - name: Delete Internet Gateway
       amazon.aws.ec2_vpc_igw:

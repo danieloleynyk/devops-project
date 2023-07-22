@@ -229,7 +229,7 @@
       community.docker.docker_image:
         build:
           path: "/home/ec2-user/{{ project_name }}"
-        name: danieloleynyk/devops-project:dev
+        name: danieloleynyk/devops-project:master
         tag: master
 
     - name: Run `docker-compose up`

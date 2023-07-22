@@ -10,7 +10,6 @@ vpc_cidr: 10.0.0.0/16
 igw_id: "igw-050032c32726fb686"
 subnet_ids: "['subnet-06146a135c4ec7fb4']"
 security_group_id: "sg-03795cf8b8f10f4e0"
-route_table_id: "rtb-01d9285174e5ebd31"
 
 ec2_instance_type: t2.micro
 ec2_image: ami-07ce6ac5ac8a0ee6f
