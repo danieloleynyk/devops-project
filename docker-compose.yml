@@ -2,9 +2,7 @@ version: "3.3"
 
 services:
   web:
-    image: devops-project/app
-    build:
-      context: .
+    image: danieloleynyk/devops-project:dev
     environment:
       - NODE_ENV=prod
     ports:
