@@ -1,0 +1,52 @@
+name: Master Deploy
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Extract project name
+        id: get_project_name
+        run: echo "::set-output name=project_name::$(echo ${{ github.repository }} | cut -d / -f 2)"
+
+#       - name: Build and push Docker image
+#         run: |
+#           docker build -t danieloleynyk/${{ steps.get_project_name.outputs.project_name }}:latest .
+#           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+#           docker push your-dockerhub-username/your-image-name:latest
+
+#   deploy:
+#     name: Deploy to EC2
+#     runs-on: ubuntu-latest
+
+#     needs: build
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Install ssh-action
+#         uses: webfactory/ssh-agent@v0.5.0
+
+#       - name: Add SSH private key
+#         run: echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh-add -
+
+#       - name: Connect to EC2 and redeploy docker-compose
+#         uses: appleboy/ssh-action@v0.2.0
+#         with:
+#           host: your-ec2-ip-address
+#           username: user
+#           key: ${{ secrets.SSH_PRIVATE_KEY }}
+#           script: |
+#             cd /path/to/your/docker-compose/directory
+#             docker-compose pull
+#             docker-compose up -d
