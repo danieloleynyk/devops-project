@@ -19,6 +19,7 @@ roles/**
 *pwd*
 *pass*
 *password*
+*.txt
 
 # Exclude all binaries
 *.bin
@@ -190,6 +191,7 @@ sketch
 *.pem
 .env
 
-venv/
-__pycache__
+ansible/
+.github/
+*.py
 *.pyc

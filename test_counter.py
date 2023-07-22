@@ -22,7 +22,7 @@ for option in options:
 se = Service(ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install())
 driver = webdriver.Chrome(service=se,options=chrome_options)
 
-url = "http://localhost:3000"
+url = "http://localhost"
 driver.get(url)
 
 def test_counter_increment_and_decrement():
