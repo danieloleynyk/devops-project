@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   web:
-    image: danieloleynyk/devops-project:dev
+    image: danieloleynyk/devops-project:master
     environment:
       - NODE_ENV=prod
     ports:
