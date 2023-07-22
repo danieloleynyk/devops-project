@@ -16,10 +16,6 @@ jobs:
       
       - name: Get image name
         run: echo "IMAGE=${{ github.repository_owner }}/${{ github.event.repository.name }}:${GITHUB_REF##*/}" >> $GITHUB_ENV
-        
-      - name: Use environment variables
-        run: |
-          echo "IMAGE=${IMAGE}"
   
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -29,8 +25,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t danieloleynyk/devops-project:dev .
-          docker push danieloleynyk/devops-project:dev
+          docker build -t ${IMAGE} .
+          docker push ${IMAGE}
 
 #   deploy:
 #     name: Deploy to EC2
