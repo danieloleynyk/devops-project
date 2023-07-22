@@ -46,5 +46,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/ec2-user/devops-project
+            git pull
             docker-compose pull
             docker-compose up -d

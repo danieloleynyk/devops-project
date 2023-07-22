@@ -225,10 +225,16 @@
         accept_hostkey: yes
         key_file: /home/ec2-user/.ssh/id_rsa
 
+    - name: Build docker image
+      community.docker.docker_image:
+        build:
+          path: "/home/ec2-user/{{ project_name }}"
+        name: danieloleynyk/devops-project:dev
+        tag: master
 
     - name: Run `docker-compose up`
       become: false
       community.docker.docker_compose:
         project_src: "/home/ec2-user/{{ project_name }}"
-        build: true
+        build: false
       register: output
