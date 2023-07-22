@@ -145,15 +145,6 @@
         regex: "^ec2_instance_ids:.*$"
         line: "ec2_instance_ids: \"{{ ec2.instance_ids }}\""
       when: ec2.instance_ids is defined
-
-    - name: Wait for SSH to become available
-      wait_for:
-        host: "{{ item.public_ip_address }}"
-        port: 22
-        delay: 10
-        timeout: 120
-        state: started
-      with_items: "{{ ec2.instances }}"
     
     - name: Add host to hosts group 'app'
       ansible.builtin.add_host:
